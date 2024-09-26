@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenStreetMap Nominatim API with Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Search for a Place using OpenStreetMap</h1>
+  <input type="text" id="search" placeholder="Enter a place">
+  <button onclick="fetchLocation()">Search</button>
+
+  <h2>Results:</h2>
+  <div id="results"></div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+  <script>
+    var map = L.map('map').setView([14.5995, 120.9842], 10);  // Default location (Manila)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    async function fetchLocation() {
+      var searchValue = document.getElementById("search").value;
+      var url = `https://nominatim.openstreetmap.org/search?format=json&q=${searchValue}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.length > 0) {
+          var result = data[0];
+          document.getElementById("results").innerHTML = 
+            `<b>Place:</b> ${result.display_name} <br>
+            <b>Latitude:</b> ${result.lat} <br>
+            <b>Longitude:</b> ${result.lon}`;
+
+          // Update the map to show the new location
+          map.setView([result.lat, result.lon], 15);
+
+          var marker = L.marker([result.lat, result.lon]).addTo(map)
+            .bindPopup(result.display_name)
+            .openPopup();
+        } else {
+          document.getElementById("results").innerHTML = "No results found";
+        }
+      } catch (error) {
+        console.log("Error fetching location data", error);
+      }
+    }
+  </script>
+
+</body>
+</html>
